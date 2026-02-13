@@ -1,0 +1,3 @@
+[workspace]
+members = ["hugind_backend","llama-cpp", "llama-cpp-ffi"]
+resolver = "1"

@@ -1,0 +1,13 @@
+[package]
+name = "llama-cpp"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+llama-cpp-ffi = { path = "../llama-cpp-ffi", default-features = true, features = [] }
+
+[features]
+default = []
+metal = ["llama-cpp-ffi/metal"]
+cuda  = ["llama-cpp-ffi/cuda"]
+mtmd  = ["llama-cpp-ffi/mtmd"]

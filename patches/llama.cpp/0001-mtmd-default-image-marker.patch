@@ -1,0 +1,13 @@
+diff --git a/tools/mtmd/mtmd.h b/tools/mtmd/mtmd.h
+index ef25d32bb..700fb3d5d 100644
+--- a/tools/mtmd/mtmd.h
++++ b/tools/mtmd/mtmd.h
+@@ -47,7 +47,7 @@
+ #endif
+ 
+ // deprecated marker, use mtmd_default_marker() instead
+-#define MTMD_DEFAULT_IMAGE_MARKER "<__image__>"
++#define MTMD_DEFAULT_IMAGE_MARKER "<image>"
+ 
+ #ifdef __cplusplus
+ extern "C" {
