@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 llama-cpp-ffi = { path = "../llama-cpp-ffi", default-features = true, features = [] }
+serde_json = "1"
 
 [features]
 default = []

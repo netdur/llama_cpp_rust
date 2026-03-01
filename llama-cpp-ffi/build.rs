@@ -91,6 +91,8 @@ fn write_unified_wrapper(
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=wrapper.h");
+    println!("cargo:rerun-if-changed=chat_template_bridge.h");
+    println!("cargo:rerun-if-changed=chat_template_bridge.cpp");
 
     let crate_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR"));
     let llama_src = crate_dir.join("vendor/llama.cpp");
@@ -124,6 +126,7 @@ fn main() {
 
     let mut builder = bindgen::Builder::default()
         .header(unified_wrapper.to_string_lossy())
+        .clang_arg(format!("-I{}", crate_dir.display()))
         .clang_arg(format!("-I{}", llama_src.join("include").display()))
         .clang_arg(format!("-I{}", llama_src.join("ggml/include").display()))
         .clang_arg(format!("-I{}", llama_src.join("tools/mtmd").display()))
@@ -147,6 +150,17 @@ fn main() {
 
     let bindings_path = out_dir.join("bindings.rs");
     fs::write(&bindings_path, bindings.to_string()).expect("failed to write bindings.rs");
+
+    cc::Build::new()
+        .cpp(true)
+        .flag_if_supported("-std=c++17")
+        .file(crate_dir.join("chat_template_bridge.cpp"))
+        .include(&crate_dir)
+        .include(llama_src.join("include"))
+        .include(llama_src.join("ggml/include"))
+        .include(llama_src.join("common"))
+        .include(llama_src.join("vendor"))
+        .compile("llama_chat_template_bridge");
 
     // ---- CMake: build llama.cpp ----
     let mut cfg = cmake::Config::new(&llama_src);
@@ -201,8 +215,12 @@ fn main() {
     let libs = list_static_lib_names(&libdir);
     let has = |name: &str| libs.iter().any(|x| x == name);
 
-    if want_mtmd && has("mtmd") {
-        println!("cargo:rustc-link-lib=static=mtmd");
+    if has("common") {
+        println!("cargo:rustc-link-lib=static=common");
+    }
+
+    if has("cpp-httplib") {
+        println!("cargo:rustc-link-lib=static=cpp-httplib");
     }
 
     if has("llama") {
@@ -213,6 +231,10 @@ fn main() {
             libdir.display(),
             libs
         );
+    }
+
+    if want_mtmd && has("mtmd") {
+        println!("cargo:rustc-link-lib=static=mtmd");
     }
 
     for lib in libs {
