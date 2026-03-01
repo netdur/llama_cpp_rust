@@ -204,6 +204,9 @@ fn main() {
     add_link_search_if_exists(&dst.join("build"));
     add_link_search_if_exists(&dst.join("build").join("lib"));
     add_link_search_if_exists(&dst.join("build").join("lib64"));
+    add_link_search_if_exists(&dst.join("build").join("src"));
+    add_link_search_if_exists(&dst.join("build").join("common"));
+    add_link_search_if_exists(&dst.join("build").join("vendor").join("cpp-httplib"));
 
     let libdir = find_first_existing_libdir(&dst).unwrap_or_else(|| {
         panic!(
@@ -215,11 +218,14 @@ fn main() {
     let libs = list_static_lib_names(&libdir);
     let has = |name: &str| libs.iter().any(|x| x == name);
 
-    if has("common") {
+    let has_common = has("common") || dst.join("build/common/libcommon.a").is_file();
+    if has_common {
         println!("cargo:rustc-link-lib=static=common");
     }
 
-    if has("cpp-httplib") {
+    let has_cpp_httplib =
+        has("cpp-httplib") || dst.join("build/vendor/cpp-httplib/libcpp-httplib.a").is_file();
+    if has_cpp_httplib {
         println!("cargo:rustc-link-lib=static=cpp-httplib");
     }
 
