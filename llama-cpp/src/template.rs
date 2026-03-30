@@ -1,6 +1,7 @@
 use std::ffi::{CString, NulError};
 use std::ptr;
 
+use crate::resolve_enable_thinking;
 use llama_cpp_ffi::{llama_chat_apply_template_with_kwargs, llama_chat_message, llama_model};
 use serde_json::{Map, Value};
 
@@ -13,6 +14,7 @@ pub struct ChatMessage<'a> {
 #[derive(Debug, Clone)]
 pub struct ChatTemplateOptions {
     pub add_generation_prompt: bool,
+    pub enable_thinking_default: bool,
     pub enable_thinking: Option<bool>,
     pub chat_template_kwargs: Map<String, Value>,
 }
@@ -21,6 +23,7 @@ impl Default for ChatTemplateOptions {
     fn default() -> Self {
         Self {
             add_generation_prompt: true,
+            enable_thinking_default: true,
             enable_thinking: None,
             chat_template_kwargs: Map::new(),
         }
@@ -90,7 +93,8 @@ pub fn apply_chat_template_with_kwargs(
     };
     let n_msg = ffi_messages.len();
 
-    let enable_thinking_default = options.enable_thinking.unwrap_or(true);
+    let enable_thinking =
+        resolve_enable_thinking(options.enable_thinking, options.enable_thinking_default);
 
     let needed = unsafe {
         llama_chat_apply_template_with_kwargs(
@@ -100,7 +104,7 @@ pub fn apply_chat_template_with_kwargs(
             n_msg,
             options.add_generation_prompt,
             kwargs_ptr,
-            enable_thinking_default,
+            enable_thinking,
             ptr::null_mut(),
             0,
         )
@@ -122,7 +126,7 @@ pub fn apply_chat_template_with_kwargs(
             n_msg,
             options.add_generation_prompt,
             kwargs_ptr,
-            enable_thinking_default,
+            enable_thinking,
             buffer.as_mut_ptr().cast(),
             length,
         )
