@@ -4,7 +4,6 @@ Rust workspace around `llama.cpp` with:
 
 - `llama-cpp`: high-level Rust bindings
 - `llama-cpp-ffi`: FFI layer and build integration
-- `hugind_backend`: backend crate using the bindings
 
 ## Repository layout
 
@@ -13,23 +12,49 @@ This is a monorepo.
 
 ## Build
 
+Default (CPU + multimodal):
+
 ```bash
-cargo build
+cargo build -p llama-cpp
 ```
 
-Metal build (macOS):
+With Metal (macOS GPU):
 
 ```bash
-./build_metal.sh
+cargo build -p llama-cpp --features llama-cpp-ffi/metal
 ```
 
-## Vendor patch workflow
-
-`llama-cpp-ffi/vendor/llama.cpp` stays close to upstream and local changes are
-stored as patch files under `patches/llama.cpp/`.
-
-After updating the submodule, re-apply local patches with:
+Release with Metal:
 
 ```bash
-./scripts/apply_vendor_patches.sh
+cargo build -p llama-cpp --release --features llama-cpp-ffi/metal
+```
+
+With CUDA (NVIDIA GPU):
+
+```bash
+cargo build -p llama-cpp --features llama-cpp-ffi/cuda
+```
+
+> `metal` and `cuda` are mutually exclusive. `mtmd` (multimodal) is enabled by default.
+
+## Updating llama.cpp
+
+To update the submodule to the latest upstream commit:
+
+```bash
+git submodule update --remote llama-cpp-ffi/vendor/llama.cpp
+```
+
+Then rebuild — bindgen regenerates the FFI bindings automatically from the headers:
+
+```bash
+cargo build -p llama-cpp
+```
+
+If everything compiles, the bindings are up to date. Commit the updated submodule pointer:
+
+```bash
+git add llama-cpp-ffi/vendor/llama.cpp
+git commit -m "Update llama.cpp submodule"
 ```
